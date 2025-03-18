@@ -15,14 +15,18 @@ struct FAT32_BootSector {
 
 class Fat32Parser {
     private:
-    DiskManager disk;
+    DiskManager &disk;
     FAT32_BootSector bootSector;
-
-    public:
-    Fat32Parser(string drive);
     bool readBootSector();
 
-    Fat32Parser(const DiskManager &d, FAT32_BootSector &bS);
+    public:
+    WORD getBytesPerSector() const;
+    BYTE getSectorsPerCluster() const;
+    WORD getReservedSectors() const;
+    BYTE getNumFATs() const;
+    DWORD getFATSize32() const;
+    
+    Fat32Parser(DiskManager &d);
 };
 
 #endif

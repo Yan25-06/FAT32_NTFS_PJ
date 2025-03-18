@@ -7,16 +7,11 @@ int main() {
     if (!disk.openDrive()) 
         return -1;
 
-    string fsType = disk.getFileSystemType();
-    cout << "He thong cua o " << string(drive.begin(), drive.end()) 
+    string fsType = disk.getFSType();
+    cout << "File System Type " << string(drive.begin(), drive.end()) 
               << " : " << fsType << endl;
     
-    FAT32_BootSector bootSector;
-    Fat32Parser parser(disk, bootSector);
+    Fat32Parser parser(disk);
 
-    // Đọc Boot Sector và kiểm tra kết quả
-    if (!parser.readBootSector()) {
-        cerr << "Loi khi doc" << endl;
-    }
     return 0;
 }

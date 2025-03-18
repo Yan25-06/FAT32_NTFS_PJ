@@ -5,20 +5,21 @@
 #include <iostream>
 #include <string>
 
-#define BYTES_PER_SECTOR 512
-
 using namespace std;
 
 class DiskManager {
     private:
     string driveLetter;
     HANDLE hDrive;
+    string fileSystemType;
 
+    string getFileSystemType();
     public:
     bool openDrive();
     void closeDrive();
     bool readSector(DWORD sectorNumber, BYTE* buffer, DWORD sectorSize);
-    string getFileSystemType();
+    string getFSType();
+
     DiskManager(string);
     ~DiskManager();
 };

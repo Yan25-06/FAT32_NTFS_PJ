@@ -1,14 +1,16 @@
 #include "fat32Parser.h"
 
-Fat32Parser::Fat32Parser(const DiskManager &d, FAT32_BootSector &bS) : disk(d), bootSector(bS) {}
+Fat32Parser::Fat32Parser(DiskManager &d) : disk(d) {
+    readBootSector();
+}
 
 bool Fat32Parser::readBootSector() {
-    BYTE bootSectorData[512]; // Boot Sector có kích thước 512 byte
-    memset(bootSectorData, 0, sizeof(bootSectorData));
+    BYTE bootSectorData[512] = {0}; // Buffer để chứa dữ liệu Boot Sector
+    DWORD bytesRead;
 
-    // Đọc sector đầu tiên (Boot Sector)
-    if (!disk.readSector(0, bootSectorData, BYTES_PER_SECTOR)) {
-        cerr << "Loi: Khong the doc Boot Sector!" << endl;
+    if (!disk.readSector(0, bootSectorData, 512))
+    {
+        cerr << "Read boot sector failed!";
         return false;
     }
 
@@ -24,7 +26,7 @@ bool Fat32Parser::readBootSector() {
         bootSector.sectorsPerCluster == 0 ||
         bootSector.numFATs == 0 ||
         bootSector.fatSize32 == 0) {
-        cerr << "Lỗi: Boot Sector không hợp lệ!" << endl;
+        cerr << "Error: Boot Sector is invalid\n" << endl;
         return false;
     }
 
@@ -35,4 +37,24 @@ bool Fat32Parser::readBootSector() {
     cout << "So sector/bang FAT: " << bootSector.fatSize32 << endl;
 
     return true;
+}
+
+WORD Fat32Parser::getBytesPerSector() const {
+    return bootSector.bytesPerSector;
+}
+
+BYTE Fat32Parser::getSectorsPerCluster() const {
+    return bootSector.sectorsPerCluster;
+}
+
+WORD Fat32Parser::getReservedSectors() const {
+    return bootSector.reservedSectors;
+}
+
+BYTE Fat32Parser::getNumFATs() const {
+    return bootSector.numFATs;
+}
+
+DWORD Fat32Parser::getFATSize32() const {
+    return bootSector.fatSize32;
 }

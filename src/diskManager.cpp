@@ -15,25 +15,27 @@ bool DiskManager::openDrive() {
         OPEN_EXISTING, 0, NULL);
 
     if (hDrive == INVALID_HANDLE_VALUE) {
-        cerr << "Loi mo o dia! Ma loi: " << GetLastError() << endl;
+        cerr << "Failed to open disk, ERROR: " << GetLastError() << endl;
         return false;
     }
+    fileSystemType = getFileSystemType();
     return true;
 }
 
 string DiskManager::getFileSystemType() {
     if (hDrive == INVALID_HANDLE_VALUE) {
-        cout << hDrive << endl;
-        cerr << "O dia chua duoc mo!\n";
+        cerr << "Drive is not open!\n";
         return "UNKNOWN";
     }
 
-    BYTE bootSector[BYTES_PER_SECTOR] = {0};
+    BYTE bootSector[512] = {0};
+    DWORD bytesRead;
 
-    if(!readSector(0, bootSector, BYTES_PER_SECTOR))
-    {
+    SetFilePointerEx(hDrive, {0}, NULL, FILE_BEGIN);
+    if (!ReadFile(hDrive, bootSector, 512, &bytesRead, NULL) || bytesRead != 512) {
+        cerr << "Error reading Boot Sector\n";
         return "UNKNOWN";
-    }
+    }    
 
     if (memcmp(bootSector + 0x03, "NTFS    ", 8) == 0) 
         return "NTFS";
@@ -42,7 +44,10 @@ string DiskManager::getFileSystemType() {
 
     return "UNKNOWN";
 }
-
+string DiskManager::getFSType()
+{
+    return fileSystemType;
+}
 void DiskManager::closeDrive() {
     if (hDrive != INVALID_HANDLE_VALUE) {
         CloseHandle(hDrive);
@@ -55,13 +60,13 @@ bool DiskManager::readSector(DWORD sectorNumber, BYTE* buffer, DWORD sectorSize)
     
     // Di chuyển con trỏ file đến sector cần đọc
     if (SetFilePointerEx(hDrive, sectorOffset, NULL, FILE_BEGIN) == 0) {
-        cerr << "Loi SetFilePointerEx! Ma loi: " << GetLastError() << endl;
+        cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
         return false;
     }
 
     DWORD bytesRead;
     if (!ReadFile(hDrive, buffer, sectorSize, &bytesRead, NULL) || bytesRead != sectorSize) {
-        cerr << "Loi doc sector! Ma loi: " << GetLastError() << endl;
+        cerr << "Read sector failed! ERROR: " << GetLastError() << endl;
         return false;
     }
 
