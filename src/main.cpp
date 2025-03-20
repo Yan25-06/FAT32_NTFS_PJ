@@ -1,4 +1,4 @@
-#include "fat32Parser.h"
+#include "fat32Recovery.h"
 
 int main() {
     string drive = "E:";
@@ -12,6 +12,20 @@ int main() {
               << " : " << fsType << endl;
     
     Fat32Parser parser(disk);
+    parser.printBootSectorInfo();
+    vector<DirectoryEntry> e = parser.readRootDirectory();
 
+    for (int i = 0; i < e.size(); i++)
+    {
+        cout << e[i].name << endl;
+    }
+    cout << endl;
+    Fat32Recovery recover(parser);
+    vector<string> deletedFile = recover.scanDeletedFiles();
+
+    for (int i = 0; i < deletedFile.size(); i++)
+    {
+        cout << deletedFile[i] << endl;
+    }
     return 0;
 }
