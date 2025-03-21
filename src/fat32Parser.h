@@ -4,7 +4,7 @@
 #include "diskManager.h"
 #include <cstring>
 #include <vector>
-
+#define BYTES_PER_CLUSTER 4
 struct FAT32_BootSector {
     WORD bytesPerSector;    // Số byte cho 1 sector
     BYTE sectorsPerCluster; // Số sector cho 1 cluster
@@ -42,12 +42,16 @@ class Fat32Parser {
     WORD getReservedSectors() const;
     BYTE getNumFATs() const;
     DWORD getFATSize32() const;
+    DWORD getRootCluster() const;
     
     void printBootSectorInfo();
 
-    vector<DirectoryEntry> readRootDirectory();
-    bool readCluster(DWORD cluster, BYTE* buffer);
-    DWORD getNextCluster(DWORD currentCluster);
+    // vector<DirectoryEntry> readRootDirectory();
+    // bool readCluster(DWORD cluster, BYTE* buffer);
+    // DWORD getNextCluster(DWORD currentCluster);
+    // DWORD getFirstSectorOfCluster(DWORD clusterNumber);
+    // void setClusterValue(DWORD cluster, DWORD value);
+    // bool readFirstCluster(DWORD startCluster, BYTE* outData, DWORD bufferSize);
     
     Fat32Parser(DiskManager &d);
 };

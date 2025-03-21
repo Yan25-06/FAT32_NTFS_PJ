@@ -72,4 +72,42 @@ bool DiskManager::readSector(DWORD sectorNumber, BYTE* buffer, DWORD sectorSize)
 
     return true; 
 }
+bool DiskManager::writeSector(DWORD sectorNumber, const BYTE* buffer, DWORD sectorSize) {
+    LARGE_INTEGER sectorOffset;
+    sectorOffset.QuadPart = sectorNumber * sectorSize;  // Tính vị trí cần ghi (byte)
+
+    // Di chuyển con trỏ file đến sector cần ghi
+    if (SetFilePointerEx(hDrive, sectorOffset, NULL, FILE_BEGIN) == 0) {
+        cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
+        return false;
+    }
+
+    DWORD bytesWritten;
+    if (!WriteFile(hDrive, buffer, sectorSize, &bytesWritten, NULL) || bytesWritten != sectorSize) {
+        cerr << "Write sector failed! ERROR: " << GetLastError() << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool DiskManager::writeByte(DWORD sectorNumber, DWORD byteOffset, BYTE value, DWORD sectorSize) {
+    LARGE_INTEGER bytePosition;
+    bytePosition.QuadPart = sectorNumber * sectorSize + byteOffset;  // Vị trí byte cần ghi
+
+    // Di chuyển con trỏ file đến vị trí byte cần ghi
+    if (SetFilePointerEx(hDrive, bytePosition, NULL, FILE_BEGIN) == 0) {
+        cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
+        return false;
+    }
+
+    DWORD bytesWritten;
+    if (!WriteFile(hDrive, &value, 1, &bytesWritten, NULL) || bytesWritten != 1) {
+        cerr << "Write byte failed! ERROR: " << GetLastError() << endl;
+        return false;
+    }
+
+    return true;
+}
+
 

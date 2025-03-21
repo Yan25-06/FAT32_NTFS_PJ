@@ -18,6 +18,8 @@ class DiskManager {
     bool openDrive();
     void closeDrive();
     bool readSector(DWORD sectorNumber, BYTE* buffer, DWORD sectorSize);
+    bool writeSector(DWORD sectorNumber, const BYTE* buffer, DWORD sectorSize);
+    bool writeByte(DWORD sectorNumber, DWORD byteOffset, BYTE value, DWORD sectorSize);
     string getFSType();
 
     DiskManager(string);

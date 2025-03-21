@@ -1,24 +1,23 @@
-#ifndef FAT32_RECOVERY_H
-#define FAT32_RECOVERY_H
+#ifndef FILERECOVERY_H
+#define FILERECOVERY_H
 
-#include "fat32Parser.h"
+#include "fat32parser.h"
+#include "diskManager.h"
+#include <fstream>
 #include <vector>
 
-class Fat32Recovery {
+class FileRecovery {
 private:
     Fat32Parser &fatParser;
+    DiskManager &diskManager;
+    
+    bool findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize);
+    bool readCluster(DWORD cluster, vector<BYTE> &buffer);
 
 public:
-    Fat32Recovery(Fat32Parser &parser);
-
-    // Quét tất cả các file đã xóa
-    vector<string> scanDeletedFiles();
-
-    // Tìm file đã xóa theo tên
-    DWORD scanDeletedFile(const string &fileName);
-
-    // Khôi phục file đã xóa
-    bool recoverFile(const string &fileName, const string &outputPath);
+    FileRecovery(Fat32Parser &parser, DiskManager &disk);
+    bool recoverFile(string & filename, const string &outputPath);
+    void listDeletedFiles();
 };
 
 #endif

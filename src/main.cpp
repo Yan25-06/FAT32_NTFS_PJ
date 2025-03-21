@@ -13,19 +13,17 @@ int main() {
     
     Fat32Parser parser(disk);
     parser.printBootSectorInfo();
-    vector<DirectoryEntry> e = parser.readRootDirectory();
+    
+    string filename = "?HW3    SQL"; // File cần khôi phục (tên 8.3)
+    string outputPath = "test.sql";
 
-    for (int i = 0; i < e.size(); i++)
-    {
-        cout << e[i].name << endl;
+    FileRecovery recovery(parser, disk);
+    recovery.listDeletedFiles();
+    if (recovery.recoverFile(filename, outputPath)) {
+        cout << "File da duoc khoi phuc thanh cong!\n";
+    } else {
+        cerr << "Khoi phuc that bai!\n";
     }
-    cout << endl;
-    Fat32Recovery recover(parser);
-    vector<string> deletedFile = recover.scanDeletedFiles();
 
-    for (int i = 0; i < deletedFile.size(); i++)
-    {
-        cout << deletedFile[i] << endl;
-    }
     return 0;
 }
