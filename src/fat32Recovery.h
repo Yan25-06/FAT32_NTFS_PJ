@@ -1,23 +1,25 @@
-#ifndef FILERECOVERY_H
-#define FILERECOVERY_H
+#ifndef FAT32RECOVERY_H
+#define FAT32RECOVERY_H
 
-#include "fat32parser.h"
 #include "diskManager.h"
+#include "utils.h"
+
 #include <fstream>
 #include <vector>
 
-class FileRecovery {
+class Fat32Recovery {
 private:
     Fat32Parser &fatParser;
     DiskManager &diskManager;
     
-    bool findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize);
-    bool readCluster(DWORD cluster, vector<BYTE> &buffer);
-
+    bool findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster);
+    void listDeletedFiles(DWORD currentCluster);
+    void listFiles(DWORD startCluster);
 public:
-    FileRecovery(Fat32Parser &parser, DiskManager &disk);
-    bool recoverFile(string & filename, const string &outputPath);
+    Fat32Recovery(Fat32Parser &parser, DiskManager &disk);
+    bool recoverFile(string & filename, const string &drive);
     void listDeletedFiles();
+    void listFiles();
 };
 
 #endif

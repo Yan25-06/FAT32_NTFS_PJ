@@ -29,10 +29,19 @@ struct DirectoryEntry {
     DWORD fileSize;        // Kích thước file
 } __attribute__((packed));
 
-
+struct LFNEntry {
+    BYTE order;
+    BYTE name1[10];
+    BYTE attr;
+    BYTE type;
+    BYTE checksum;
+    BYTE name2[12];
+    WORD zero;
+    BYTE name3[4];
+} __attribute__((packed));
 class Fat32Parser {
     private:
-    DiskManager &disk;
+    DiskManager &diskManager;
     FAT32_BootSector bootSector;
     bool readBootSector();
 
@@ -45,7 +54,7 @@ class Fat32Parser {
     DWORD getRootCluster() const;
     
     void printBootSectorInfo();
-
+    bool readCluster(DWORD cluster, vector<BYTE> &buffer);
     // vector<DirectoryEntry> readRootDirectory();
     // bool readCluster(DWORD cluster, BYTE* buffer);
     // DWORD getNextCluster(DWORD currentCluster);

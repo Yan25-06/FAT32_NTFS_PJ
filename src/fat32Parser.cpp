@@ -1,6 +1,6 @@
 #include "fat32Parser.h"
 
-Fat32Parser::Fat32Parser(DiskManager &d) : disk(d) {
+Fat32Parser::Fat32Parser(DiskManager &d) : diskManager(d) {
     readBootSector();
 }
 
@@ -8,7 +8,7 @@ bool Fat32Parser::readBootSector() {
     BYTE bootSectorData[512] = {0}; // Buffer để chứa dữ liệu Boot Sector
     DWORD bytesRead;
 
-    if (!disk.readSector(0, bootSectorData, 512))
+    if (!diskManager.readSector(0, bootSectorData, 512))
     {
         cerr << "Read boot sector failed!";
         return false;
@@ -40,6 +40,23 @@ void Fat32Parser::printBootSectorInfo()
     cout << "So bang FAT: " << (int)bootSector.numFATs << endl;
     cout << "So sector/bang FAT: " << bootSector.fatSize32 << endl;
     cout << "Cluster bat dau cua RDET: " << bootSector.rootCluster << endl;
+}
+
+// Doc du lieu tu cluster
+bool Fat32Parser::readCluster(DWORD cluster, vector<BYTE> &buffer) {
+    DWORD firstSector = getReservedSectors() + (getNumFATs() * getFATSize32()) + ((cluster - 2) * getSectorsPerCluster());
+    DWORD sectorSize = getBytesPerSector();
+    
+    buffer.resize(sectorSize * getSectorsPerCluster());
+
+    for (DWORD i = 0; i < getSectorsPerCluster(); i++) {
+        if (!diskManager.readSector(firstSector + i, buffer.data() + (i * sectorSize), sectorSize)) {
+            cerr << "Loi doc cluster tai sector " << (firstSector + i) << "\n";
+            return false;
+        }
+    }
+
+    return true;
 }
 WORD Fat32Parser::getBytesPerSector() const {
     return bootSector.bytesPerSector;
