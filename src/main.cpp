@@ -32,10 +32,6 @@ void printMenu() {
     // parser.printBootSectorInfo();
     // Fat32Recovery recovery(parser, disk);
 
-    Fat32Parser parser(disk);
-    parser.printBootSectorInfo();
-    Fat32Recovery recovery(parser, disk);
-
     //     switch (choice) {
     //         case 1: { // Xem loai he thong tap tin
     //             string fsType = disk.getFSType();

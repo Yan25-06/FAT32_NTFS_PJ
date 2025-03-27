@@ -91,19 +91,19 @@ bool DiskManager::writeSector(DWORD sectorNumber, const BYTE* buffer, DWORD sect
     return true;
 }
 
-bool DiskManager::writeByte(DWORD sectorNumber, DWORD byteOffset, BYTE value, DWORD sectorSize) {
-    LARGE_INTEGER bytePosition;
-    bytePosition.QuadPart = sectorNumber * sectorSize + byteOffset;  // Vị trí byte cần ghi
+bool DiskManager::readBytes(DWORD offset, BYTE* buffer, DWORD byteCount) {
+    LARGE_INTEGER byteOffset;
+    byteOffset.QuadPart = offset;  // Vị trí cần đọc (tính theo byte)
 
-    // Di chuyển con trỏ file đến vị trí byte cần ghi
-    if (SetFilePointerEx(hDrive, bytePosition, NULL, FILE_BEGIN) == 0) {
+    // Di chuyển con trỏ file đến vị trí cần đọc
+    if (SetFilePointerEx(hDrive, byteOffset, NULL, FILE_BEGIN) == 0) {
         cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
         return false;
     }
 
-    DWORD bytesWritten;
-    if (!WriteFile(hDrive, &value, 1, &bytesWritten, NULL) || bytesWritten != 1) {
-        cerr << "Write byte failed! ERROR: " << GetLastError() << endl;
+    DWORD bytesRead;
+    if (!ReadFile(hDrive, buffer, byteCount, &bytesRead, NULL) || bytesRead != byteCount) {
+        cerr << "ReadFile failed! ERROR: " << GetLastError() << endl;
         return false;
     }
 

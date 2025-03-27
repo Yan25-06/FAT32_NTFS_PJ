@@ -177,13 +177,15 @@ void NTFSParser::GetMFTRunList()
     BYTE tmpAttrValue[1024] = {0};// Bộ đệm tạm để lưu giá trị thuộc tính
 
     // Đọc dữ liệu từ cluster bắt đầu của MFT
-    cout << this->MFTStartCluster * this->sectorsPerCluster << endl;
-    diskManager.readSector(this->MFTStartCluster * this->sectorsPerCluster, tmpBuf, 1024);
+    DWORD offset = this->MFTStartCluster * this->sectorsPerCluster * this->bytesPerSector;
+    
+    diskManager.readBytes(offset, tmpBuf, this->clustersPerMFTRecord);
     WriteHexToFile("output_hex.txt", tmpBuf, 1024);
 
     // Lấy giá trị độ lệch của số thứ tự cập nhật (Update Sequence Number - USN)
     UINT16 usnOffset = *(UINT16*)&tmpBuf[4]; 
 
+    cout << usnOffset << endl;
     // Khôi phục hai byte cuối của sector đầu tiên trong bản ghi MFT
     memcpy(tmpBuf + 0x1FE, tmpBuf + usnOffset + 2, 2);
 
@@ -196,12 +198,13 @@ void NTFSParser::GetMFTRunList()
         UINT16 dataRunOffset = *(UINT16*)&tmpAttrValue[0x20];
         // Trích xuất danh sách Data Run từ thuộc tính dữ liệu
         this->GetDataRunList(tmpAttrValue, dataRunOffset, &this->MFTRecordList);
+        cout << dataRunOffset << endl;
     }
 }
 
 int main() {
     // 
-    DiskManager disk("\\\\.\\F:");
+    DiskManager disk("C:");
     if (!disk.openDrive()) {
         cerr << "Khong the mo o dia!\n";
         return -1;
