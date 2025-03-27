@@ -80,9 +80,9 @@ bool Fat32Recovery::recoverFile(string &filename, const string &drive) {
 
 void Fat32Recovery::listDeletedFiles() {
     cout << "Danh sach file bi xoa:\n";
-    cout << "--------------------------------------\n";
-    cout << "Ten file        | Cluster | Kich thuoc\n";
-    cout << "--------------------------------------\n";
+    cout << "-------------------------------------------\n";
+    cout << "Ten file             | Cluster | Kich thuoc\n";
+    cout << "-------------------------------------------\n";
     
     listDeletedFiles(fatParser.getRootCluster());
 }
@@ -117,7 +117,7 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
             DWORD startCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
             
             // In thông tin file bị xóa
-            printf("%-15s | %-7u | %-10u\n", name, startCluster, entries[i].fileSize);
+            printf("%-20s | %-7u | %-10u\n", name, startCluster, entries[i].fileSize);
         }
 
         // Nếu là thư mục con (attr & 0x10) và không phải "." hay ".."
@@ -136,9 +136,9 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
 
 void Fat32Recovery::listFiles() {
     cout << "Danh sach file:\n";
-    cout << "--------------------------------------\n";
-    cout << "Ten file        | Cluster | Kich thuoc\n";
-    cout << "--------------------------------------\n";
+    cout << "-------------------------------------------\n";
+    cout << "Ten file             | Cluster | Kich thuoc\n";
+    cout << "-------------------------------------------\n";
 
     listFiles(fatParser.getRootCluster());
 }

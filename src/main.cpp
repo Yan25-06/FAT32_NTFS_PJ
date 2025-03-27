@@ -29,6 +29,7 @@ int main() {
     }
 
     Fat32Parser parser(disk);
+    parser.printBootSectorInfo();
     Fat32Recovery recovery(parser, disk);
 
     int choice;
