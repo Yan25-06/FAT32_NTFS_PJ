@@ -4,9 +4,13 @@
 #include <stdlib.h>
 #include <cmath>
 #include <cstdint>
+#include <string>
 using namespace std;
 
 #pragma pack(push,1)
+
+#define MFTREFMASK	0xFFFFFFFFFFFF
+
 enum NTFS_ATTRDEF
 {
 	ATTR_STANDARD = 0x10, // Thuộc tính thông tin tiêu chuẩn
@@ -41,22 +45,57 @@ typedef struct _NTFS_Data_Run
 		next = NULL;
 	}
 } Ntfs_Data_Run;
-
 #pragma pack(pop)
+
+
+#pragma pack(push, 1)
+
+// Các khối dữ liệu mà một tệp chiếm dụng trên ổ đĩa. 
+// Mỗi tệp có thể chiếm một vùng liên tục hoặc nhiều vùng không liên tục.
+typedef struct _File_Content_Extent
+{
+	UINT64	startSector;
+	UINT64	totalSector;
+	UINT8	isPersist;
+
+	_File_Content_Extent *next;
+	_File_Content_Extent()
+	{
+		isPersist = 0;
+		startSector = 0;
+		totalSector = 0;
+		next = NULL;
+	}
+}File_Content_Extent_s;
+#pragma pack(pop)
+
 
 class NTFSParser {
     public:
         NTFSParser(DiskManager &d);
+		~NTFSParser();
+		void freeRunList(Ntfs_Data_Run *list);
         bool getBasicInfo();
         void printBootSectorInfo();
-        UINT32 GetAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *prmAttrValue);
+
         void GetMFTRunList();
-        void GetDataRunList(UCHAR *prmBuf, UINT16 prmRunListOffset, Ntfs_Data_Run **prmList);
+        
+		UINT32 GetAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *prmAttrValue);
+		UINT32 GetAttrFromAttributeList(NTFS_ATTRDEF prmAttrType,UINT32 prmOffset,UCHAR *prmAttrList,UCHAR *prmAttrValue);
+		UINT32 GetExtendMFTAttrValue(UINT64 prmSeqNum,NTFS_ATTRDEF prmAttrType,UCHAR *prmAttrValue);
+		string getFileName(DWORD prmOffset); // phai check dieu kien o ngoai
+
+		void GetDataRunList(UCHAR *prmBuf, UINT16 prmRunListOffset, Ntfs_Data_Run **prmList);
+		void GetFileExtent(UCHAR *prmBuf,UINT64 prmMftSector,File_Content_Extent_s **prmFileExtent);
+
+		UINT64	GetOffsetByMFTRef(UINT64 prmSeqNo);
     private:
         UINT64 MFTStartCluster;
         UINT64 bytesPerSector;       
         UINT64 sectorsPerCluster;
         UINT64 clustersPerMFTRecord;
+		UINT64 totalSectors;
         DiskManager &diskManager;
         Ntfs_Data_Run *MFTRecordList;
 };
+
