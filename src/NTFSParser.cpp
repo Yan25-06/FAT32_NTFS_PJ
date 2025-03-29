@@ -123,13 +123,13 @@ void NTFSParser::printBootSectorInfo() {
     cout << "Total Sector: " << totalSectors << endl;
     cout << "MFT Start Cluster: " << MFTStartCluster << endl;
     DWORD offset = this->MFTStartCluster * this->sectorsPerCluster * this->bytesPerSector;
-    // cout << "File name: " << getFileName(offset) << endl;
+    cout << "File name: " << getFileName(offset) << endl;
     // cout << "Cluster per Record: " << clustersPerMFTRecord << endl;
     Ntfs_Data_Run *temp = this->MFTRecordList;
-    while (temp != NULL) {
-        cout << temp->lcn << " " << temp->vcn << " " << temp->length << endl;
-        temp = temp->next;
-    } 
+    // while (temp != NULL) {
+    //     cout << temp->lcn << " " << temp->vcn << " " << temp->length << endl;
+    //     temp = temp->next;
+    // } 
 }
 
 UINT32 NTFSParser::GetAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *prmAttrValue)
@@ -189,7 +189,7 @@ UINT32	NTFSParser::GetExtendMFTAttrValue(UINT64 prmSeqNum,NTFS_ATTRDEF prmAttrTy
 {
 	UCHAR	tmpBuf[1024] = {0};
 	prmSeqNum = prmSeqNum & MFTREFMASK;
-	UINT64	tmpOffset = this->GetOffsetByMFTRef(prmSeqNum);
+	DWORD	tmpOffset = this->GetOffsetByMFTRef(prmSeqNum);
     diskManager.readBytes(tmpOffset, tmpBuf, 1024);
 	UINT16	tmpUsnOffset = *(UINT16*)&tmpBuf[4];
 	memcpy(tmpBuf+0x1FE,tmpBuf+tmpUsnOffset+2,2);
@@ -401,25 +401,6 @@ void NTFSParser::GetMFTRunList()
         // Trích xuất danh sách Data Run từ thuộc tính dữ liệu
         this->GetDataRunList(tmpAttrValue, dataRunOffset, &this->MFTRecordList);
     }
-    wchar_t		tmpFileName[MAX_PATH] = {0};
-    UINT32	attrOffset = *(UINT16*)&tmpBuf[20];
-	UINT32	attrLen = 0;
-	while (attrOffset < 1024)
-	{
-		if (tmpBuf[attrOffset] == 0xff)
-            break;
-		attrLen = *(UINT16*)&tmpBuf[attrOffset + 4];
-		if (tmpBuf[attrOffset] == ATTR_FILE_NAME && tmpBuf[attrOffset+0x59]!=2)
-		{
-			UINT8	tmpFileLen = tmpBuf[attrOffset + 0x58];
-			memset(tmpFileName,0,sizeof(tmpFileName));
-			memcpy(tmpFileName,tmpBuf+attrOffset+0x5A,tmpFileLen<<1);
-			//::WideCharToMultiByte(CP_ACP,0,tmpFileName,-1,tmpAnsiName,MAX_PATH*2,0,0);
-			cout << "File name: " << ConvertWCharToString(tmpFileName) << endl;
-			
-		}
-		attrOffset += attrLen;
-	}
 }
 
 void NTFSParser::freeRunList(Ntfs_Data_Run *list)
@@ -437,6 +418,31 @@ NTFSParser::~NTFSParser() {
     freeRunList(MFTRecordList);
 }
 
+void NTFSParser::printFileList() {
+    UINT32	clusterSize = sectorsPerCluster * bytesPerSector;
+    UCHAR	*szBuf = (UCHAR*)malloc(sizeof(UCHAR)*clusterSize);
+	if (szBuf == NULL)
+	{
+		return;
+	}
+	Ntfs_Data_Run	*p = MFTRecordList;
+    while (p != NULL)
+	{
+		for (int i = 0; i < p->length; i++)
+		{
+			DWORD	clusterOffset = (p->lcn*sectorsPerCluster + i*sectorsPerCluster) * bytesPerSector;
+            cout << clusterOffset << endl;
+			diskManager.readBytes(clusterOffset, szBuf, clusterSize);
+            for (UINT32 j = 0; j < clusterSize ; j += 1024)
+                if (szBuf[j + 0x16] == 0) {
+                    DWORD address = (DWORD_PTR)(szBuf + j) * bytesPerSector;
+                    cout << getFileName(address);
+                }
+        }
+        p = p->next;
+    }
+    free(szBuf);
+}
 int main() {
     // 
     DiskManager disk("F:");
@@ -446,6 +452,7 @@ int main() {
     }
     NTFSParser parser(disk);
     parser.printBootSectorInfo();
+    parser.printFileList();
     // if (parser.readBootSector()) {
     //     cout << "Boot sector read successfully!" << endl;
     // }

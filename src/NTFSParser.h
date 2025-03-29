@@ -88,6 +88,7 @@ class NTFSParser {
 		void GetDataRunList(UCHAR *prmBuf, UINT16 prmRunListOffset, Ntfs_Data_Run **prmList);
 		void GetFileExtent(UCHAR *prmBuf,UINT64 prmMftSector,File_Content_Extent_s **prmFileExtent);
 
+		void printFileList();
 		UINT64	GetOffsetByMFTRef(UINT64 prmSeqNo);
     private:
         UINT64 MFTStartCluster;
