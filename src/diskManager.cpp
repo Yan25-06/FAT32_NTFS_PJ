@@ -58,6 +58,11 @@ bool DiskManager::readSector(DWORD sectorNumber, BYTE* buffer, DWORD sectorSize)
     LARGE_INTEGER sectorOffset;
     sectorOffset.QuadPart = sectorNumber * sectorSize;  // Tính vị trí cần đọc (byte)
     
+    if (hDrive == INVALID_HANDLE_VALUE) {
+        cerr << "Invalid drive handle!" << endl;
+        return false;
+    }
+    
     // Di chuyển con trỏ file đến sector cần đọc
     if (SetFilePointerEx(hDrive, sectorOffset, NULL, FILE_BEGIN) == 0) {
         cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
@@ -76,6 +81,11 @@ bool DiskManager::writeSector(DWORD sectorNumber, const BYTE* buffer, DWORD sect
     LARGE_INTEGER sectorOffset;
     sectorOffset.QuadPart = sectorNumber * sectorSize;  // Tính vị trí cần ghi (byte)
 
+    if (hDrive == INVALID_HANDLE_VALUE) {
+        cerr << "Invalid drive handle!" << endl;
+        return false;
+    }
+    
     // Di chuyển con trỏ file đến sector cần ghi
     if (SetFilePointerEx(hDrive, sectorOffset, NULL, FILE_BEGIN) == 0) {
         cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
@@ -95,6 +105,11 @@ bool DiskManager::readBytes(DWORD offset, BYTE* buffer, DWORD byteCount) {
     LARGE_INTEGER byteOffset;
     byteOffset.QuadPart = offset;  // Vị trí cần đọc (tính theo byte)
 
+    if (hDrive == INVALID_HANDLE_VALUE) {
+        cerr << "Invalid drive handle!" << endl;
+        return false;
+    }
+    
     // Di chuyển con trỏ file đến vị trí cần đọc
     if (SetFilePointerEx(hDrive, byteOffset, NULL, FILE_BEGIN) == 0) {
         cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
