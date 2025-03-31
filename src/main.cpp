@@ -1,6 +1,4 @@
-#include <iostream>
-#include <string>
-
+#include "NTFSParser.h"
 #include "fat32Recovery.h"
 
 using namespace std;
@@ -17,6 +15,17 @@ void printMenu() {
     cout << "Chon: ";
 }
 
+int main() {
+    DiskManager disk("F:");
+    if (!disk.openDrive()) {
+        cerr << "Khong the mo o dia!\n";
+        return -1;
+    }
+    NTFSParser parser(disk);
+    cout << disk.getFSType() << endl;
+    parser.printBasicInfo();
+    return 0;
+}
 // int main() {
 //     string drive;
 //     cout << "Nhap ky tu o dia (VD: E:): ";

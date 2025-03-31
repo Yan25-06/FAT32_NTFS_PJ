@@ -55,12 +55,6 @@ class Fat32Parser {
     
     void printBootSectorInfo();
     bool readCluster(DWORD cluster, vector<BYTE> &buffer);
-    // vector<DirectoryEntry> readRootDirectory();
-    // bool readCluster(DWORD cluster, BYTE* buffer);
-    // DWORD getNextCluster(DWORD currentCluster);
-    // DWORD getFirstSectorOfCluster(DWORD clusterNumber);
-    // void setClusterValue(DWORD cluster, DWORD value);
-    // bool readFirstCluster(DWORD startCluster, BYTE* outData, DWORD bufferSize);
     
     Fat32Parser(DiskManager &d);
 };
