@@ -1,3 +1,6 @@
+#ifndef NTFSPARSER_H
+#define NTFSPARSER_H
+
 #include "diskManager.h"
 #include <cstring>
 #include <vector>
@@ -31,72 +34,27 @@ enum NTFS_ATTRDEF
 	ATTR_LOG_STREAM = 0x100 // Thuộc tính luồng nhật ký (log stream)
 };
 
-typedef struct _NTFS_Data_Run
+struct Ntfs_Data_Run
 {
-	UINT64 lcn;      // Số cụm logic (Logical Cluster Number - LCN), chỉ vị trí dữ liệu thực tế trên ổ đĩa.
-    UINT64 vcn;      // Số cụm ảo (Virtual Cluster Number - VCN), thể hiện thứ tự logic của dữ liệu trong file.
-    UINT64 length;   // Độ dài (số cụm) mà đoạn dữ liệu này chiếm.
-    _NTFS_Data_Run *next;  // Con trỏ đến data run tiếp theo trong danh sách liên kết.
-	_NTFS_Data_Run()
-	{
-		lcn = 0;
-		vcn = 0;
-		length = 0;
-		next = NULL;
-	}
-} Ntfs_Data_Run;
-#pragma pack(pop)
-
-
-#pragma pack(push, 1)
-
-// Các khối dữ liệu mà một tệp chiếm dụng trên ổ đĩa. 
-// Mỗi tệp có thể chiếm một vùng liên tục hoặc nhiều vùng không liên tục.
-typedef struct _File_Content_Extent
-{
-	UINT64	startSector;
-	UINT64	totalSector;
-	UINT8	isPersist;
-
-	_File_Content_Extent *next;
-	_File_Content_Extent()
-	{
-		isPersist = 0;
-		startSector = 0;
-		totalSector = 0;
-		next = NULL;
-	}
-}File_Content_Extent_s;
+	DWORD lcn = 0;      // Số cụm logic (Logical Cluster Number - LCN), chỉ vị trí dữ liệu thực tế trên ổ đĩa.
+    DWORD vcn = 0;      // Số cụm ảo (Virtual Cluster Number - VCN), thể hiện thứ tự logic của dữ liệu trong file.
+    DWORD length = 0;   // Độ dài (số cụm) mà đoạn dữ liệu này chiếm.
+};
 #pragma pack(pop)
 
 
 class NTFSParser {
     public:
         NTFSParser(DiskManager &d);
-		~NTFSParser();
-		void freeRunList(Ntfs_Data_Run *list);
         bool getBasicInfo();
-        void printBootSectorInfo();
-
-        void GetMFTRunList();
-        
-		UINT32 GetAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *prmAttrValue);
-		UINT32 GetAttrFromAttributeList(NTFS_ATTRDEF prmAttrType,UINT32 prmOffset,UCHAR *prmAttrList,UCHAR *prmAttrValue);
-		UINT32 GetExtendMFTAttrValue(UINT64 prmSeqNum,NTFS_ATTRDEF prmAttrType,UCHAR *prmAttrValue);
-		string getFileName(DWORD prmOffset); // phai check dieu kien o ngoai
-
-		void GetDataRunList(UCHAR *prmBuf, UINT16 prmRunListOffset, Ntfs_Data_Run **prmList);
-		void GetFileExtent(UCHAR *prmBuf,UINT64 prmMftSector,File_Content_Extent_s **prmFileExtent);
-
-		void printFileList();
-		UINT64	GetOffsetByMFTRef(UINT64 prmSeqNo);
+        void printBasicInfo();
     private:
-        UINT64 MFTStartCluster;
-        UINT64 bytesPerSector;       
-        UINT64 sectorsPerCluster;
-        UINT64 clustersPerMFTRecord;
-		UINT64 totalSectors;
+        DWORD MFTStartCluster;
+        DWORD bytesPerSector;       
+        DWORD sectorsPerCluster;
+		DWORD totalSectors;
         DiskManager &diskManager;
         Ntfs_Data_Run *MFTRecordList;
 };
 
+#endif
