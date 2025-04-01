@@ -40,6 +40,7 @@ struct Ntfs_Data_Run
     DWORD vcn = 0;      // Số cụm ảo (Virtual Cluster Number - VCN), thể hiện thứ tự logic của dữ liệu trong file.
     DWORD length = 0;   // Độ dài (số cụm) mà đoạn dữ liệu này chiếm.
 };
+
 #pragma pack(pop)
 
 
@@ -48,13 +49,20 @@ class NTFSParser {
         NTFSParser(DiskManager &d);
         bool getBasicInfo();
         void printBasicInfo();
+		bool getAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *prmAttrValue);
+		void getDataRunList(BYTE *prmBuf, WORD prmRunListOffset, vector<Ntfs_Data_Run> &prmList);
+		void getMFTRunList();
+		void readMFT(); // Ham dung de debug
+		void getDeletedFileNames(); // Ham dung debug
+		bool getDeletedFileRecord(string fileName, BYTE *fileBuf);
+		bool getFileContent(BYTE *fileBuf, vector<BYTE> &fileContent);
     private:
         DWORD MFTStartCluster;
         DWORD bytesPerSector;       
         DWORD sectorsPerCluster;
 		DWORD totalSectors;
         DiskManager &diskManager;
-        Ntfs_Data_Run *MFTRecordList;
+        vector<Ntfs_Data_Run> MFTRecordList;
 };
 
 #endif
