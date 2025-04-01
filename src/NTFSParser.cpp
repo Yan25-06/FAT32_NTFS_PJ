@@ -26,9 +26,4 @@ void NTFSParser::printBasicInfo() {
     cout << "Total Sector: " << totalSectors << endl;
     cout << "MFT Start Cluster: " << MFTStartCluster << endl;
     DWORD offset = this->MFTStartCluster * this->sectorsPerCluster * this->bytesPerSector;
-    // Ntfs_Data_Run *temp = this->MFTRecordList;
-    // while (temp != NULL) {
-    //     cout << temp->lcn << " " << temp->vcn << " " << temp->length << endl;
-    //     temp = temp->next;
-    // } 
 }

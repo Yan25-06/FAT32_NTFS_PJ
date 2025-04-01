@@ -1,10 +1,22 @@
 #include "utils.h"
 
-string extractFileName(const DirectoryEntry *entries, string filename, size_t index)
+void printMenu() {
+    cout << "\n===== MENU =====\n";
+    cout << "1. Xem loai he thong tap tin\n";
+    cout << "2. Hien thi thong tin Boot Sector\n";
+    cout << "3. Liet ke danh sach file\n";
+    cout << "4. Liet ke danh sach file da xoa\n";
+    cout << "5. Khoi phuc file\n";
+    cout << "6. Thoat\n";
+    cout << "================\n";
+    cout << "Chon: ";
+}
+
+string extractFileName(const DirectoryEntry *entries, char firstChar, size_t index)
 {
-    if (filename.size() > SFN_SIZE)
+    if (index > 0 && entries[index - 1].attr == 0x0F)
         return extractLFN(entries, index);
-    return extractSFN(entries, filename, index);
+    return extractSFN(entries, firstChar, index);
 }
 
 string utf16le_to_utf8(const wstring &wstr) {
@@ -12,10 +24,10 @@ string utf16le_to_utf8(const wstring &wstr) {
     return conv.to_bytes(wstr);
 }
 
-string extractSFN(const DirectoryEntry *entries, string filename, size_t index)
+string extractSFN(const DirectoryEntry *entries, char firstChar, size_t index)
 {
-    char recoveredName[12] = {0};
-    recoveredName[0] = filename[0];
+    char recoveredName[SFN_SIZE] = {0};
+    recoveredName[0] = firstChar;
     memcpy(&recoveredName[1], &entries[index].name[1], 10); // Bỏ ký tự đầu
     return string(recoveredName);
 }

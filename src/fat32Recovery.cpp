@@ -17,12 +17,13 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
     }
 
     DirectoryEntry *entries = reinterpret_cast<DirectoryEntry *>(buffer.data());
-    size_t numEntries = clusterSize / sizeof(DirectoryEntry);  cout << "Number of entries in this cluster: " << numEntries << endl;
+    size_t numEntries = clusterSize / sizeof(DirectoryEntry); 
     
     for (size_t i = 0; i < numEntries; i++) {
-        cout << i << "," << entries[i].name << endl;
+        // cout << i << "," << entries[i].name << endl;
         if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F && entries[i].attr != 0x10) { // File da bi xoa
-            string fileEntryName = extractFileName(entries, filename, i);
+            string fileEntryName = extractFileName(entries, filename[0], i);
+            cout << fileEntryName << endl;
             if (fileEntryName == filename) { // So sánh không lấy ký tự đầu
                 outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
                 outFileSize = entries[i].fileSize;
@@ -31,12 +32,12 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
         }
         
         if ((entries[i].attr & 0x10) && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x00) {
-            char nameWithNull[12];  // Đảm bảo có không gian cho dấu kết thúc '\0'
-            memcpy(nameWithNull, entries[i].name, 11); 
-            nameWithNull[11] = '\0'; 
+            char nameWithNull[SFN_SIZE + 1];  // Đảm bảo có không gian cho dấu kết thúc '\0'
+            memcpy(nameWithNull, entries[i].name, SFN_SIZE); 
             string dirName(nameWithNull);
+            trim(dirName);
 
-            if (dirName == ".          " || dirName == "..         ") {
+            if (dirName == "." || dirName == "..") {
                 continue; // Nếu là thư mục '.' hoặc '..', bỏ qua và tiếp tục
             }
             DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
@@ -45,8 +46,6 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
             }
         }
     }
-
-    cerr << "Khong tim thay file bi xoa nao!\n";
     return false;
 }
 // 🔄 Khoi phuc file
@@ -105,7 +104,13 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
 
     bool found = false;
 
-    for (size_t i = 0; i < numEntries; i++) {
+    for (size_t i = 0; i < numEntries; i++) 
+    {
+        char nameWithNull[SFN_SIZE + 1] = {0};
+        memcpy(nameWithNull, entries[i].name, SFN_SIZE);
+        string entryName(nameWithNull);
+        trim(entryName);
+
         if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F) { // File đã bị xóa
             found = true;
 
@@ -121,16 +126,16 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
         }
 
         // Nếu là thư mục con (attr & 0x10) và không phải "." hay ".."
-        if ((entries[i].attr & 0x10) && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x00) {
+        if ((entries[i].attr & 0x10) && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x00) 
+        {
+            if (entryName == "." || entryName == "..") {
+                continue; // Nếu là thư mục '.' hoặc '..', bỏ qua và tiếp tục
+            }
             DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
             if (subDirCluster != 0 && subDirCluster != currentCluster) {
                 listDeletedFiles(subDirCluster); // Đệ quy vào thư mục con
             }
         }
-    }
-
-    if (!found && currentCluster == fatParser.getRootCluster()) {
-        cout << "Khong tim thay file bi xoa nao!\n";
     }
 }
 
@@ -161,10 +166,11 @@ void Fat32Recovery::listFiles(DWORD startCluster) {
     for (size_t i = 0; i < numEntries; i++) {
         if (entries[i].name[0] == 0x00) break; // Hết danh sách
 
-        char nameWithNull[12] = {0};
-        memcpy(nameWithNull, entries[i].name, 11);
+        char nameWithNull[SFN_SIZE + 1] = {0};
+        memcpy(nameWithNull, entries[i].name, SFN_SIZE);
         string entryName(nameWithNull);
         trim(entryName);
+
         DWORD fileCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
         DWORD fileSize = entries[i].fileSize;
 

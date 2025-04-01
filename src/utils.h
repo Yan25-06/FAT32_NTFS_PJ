@@ -8,11 +8,12 @@
 #include <cctype>
 #define SFN_SIZE 11
 
-string extractFileName(const DirectoryEntry *entries, string filename, size_t index);
+string extractFileName(const DirectoryEntry *entries, char firstChar, size_t index);
 string utf16le_to_utf8(const wstring &wstr);
-string extractSFN(const DirectoryEntry *entries, string filename, size_t index);
+string extractSFN(const DirectoryEntry *entries, char firstChar, size_t index);
 string extractLFN(const DirectoryEntry *entries, size_t index);
 string convertToSFN(const string &filename);
 void trim(string &s);
+void printMenu();
 
 #endif
