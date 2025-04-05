@@ -237,7 +237,7 @@ void NTFSParser::readMFT() {
                     wchar_t	tmpFileName[MAX_PATH] = {0};
                     memset(tmpFileName,0,sizeof(tmpFileName));
                     memcpy(tmpFileName,tmpAttrValue+0x5A,tmpFileLen<<1);
-                    cout << ConvertWCharToString(tmpFileName) << endl;
+                    // cout << ConvertWCharToString(tmpFileName) << endl;
                 }
             }
             offset += 1024;
@@ -272,7 +272,7 @@ void NTFSParser::getDeletedFileNames() {
                         wchar_t	tmpFileName[MAX_PATH] = {0};
                         memset(tmpFileName,0,sizeof(tmpFileName));
                         memcpy(tmpFileName,tmpAttrValue+0x5A,tmpFileLen<<1);
-                        cout << ConvertWCharToString(tmpFileName) << endl;
+                        // cout << ConvertWCharToString(tmpFileName) << endl;
                     }
                 }
             }
@@ -295,6 +295,7 @@ bool NTFSParser::getDeletedFileRecord(string fileName, BYTE *fileBuf) {
     for (int i = 0; i < n; i++) {
         numRecord = MFTRecordList[i].length * sectorsPerCluster * bytesPerSector / 1024;
         offset = MFTRecordList[i].lcn * sectorsPerCluster * bytesPerSector;
+        // cout << offset << endl;
         if (!diskManager.readBytes(offset, tmpBuf, 1024)) {
             cout << "Loi readBytes " << endl;
             return 0;
@@ -311,7 +312,7 @@ bool NTFSParser::getDeletedFileRecord(string fileName, BYTE *fileBuf) {
                         if (fileName == ConvertWCharToString(tmpFileName)) {
                             // cout << fileName << endl;
                             memcpy(fileBuf, tmpBuf, 1024);
-                            WriteHexToFile("MFTRecord.txt", fileBuf, 1024);
+                            // WriteHexToFile("MFTRecord.txt", fileBuf, 1024);
                             return 1;
                         }
                     }
@@ -329,7 +330,7 @@ bool NTFSParser::getDeletedFileRecord(string fileName, BYTE *fileBuf) {
 bool NTFSParser::getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent) {
     BYTE tmpAttrValue[1024] = {0};
     if (getAttrValue(ATTR_DATA, fileBuf, tmpAttrValue)) {
-        WriteHexToFile("DATA_ATTR.txt", tmpAttrValue, 1024);
+        // WriteHexToFile("DATA_ATTR.txt", tmpAttrValue, 1024);
         // attrLen = *(UINT32*)&szAttrValue[4];
         if (tmpAttrValue[8] == 0)
         {
@@ -364,10 +365,93 @@ bool NTFSParser::getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent) {
             }
             int lastClusterLength = lengthFile % bytesPerCluster;
             fileContent.insert(fileContent.end(), tmpBuf, tmpBuf + lastClusterLength);
-            cout << fileContent.size() << endl;
+            // cout << fileContent.size() << endl;
             return 1;
         }
     }
     return 0;
 }
 
+bool WriteVector_ToFile(string filename, const vector<BYTE>& data) {
+    ofstream outFile(filename, std::ios::binary);
+    if (!outFile) {
+        return false; // Mở tệp thất bại
+    }
+    outFile.write(reinterpret_cast<const char*>(data.data()), data.size());
+    return outFile.good();
+}
+
+void WriteHex_ToFile(const char *filename, vector<BYTE> buf) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        printf("Khong mo duoc file!\n");
+        return;
+    }
+    int size = buf.size();
+    // Ghi dòng header cho index cột (00 01 02 ... 0F)
+    fprintf(file, "Offset  |  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  | ASCII\n");
+    fprintf(file, "--------+------------------------------------------------+----------------\n");
+
+    for (int i = 0; i < size; i += 16) {
+        // Ghi offset (chỉ mục dòng)
+        fprintf(file, "%06X  |  ", i);
+
+        // Ghi 16 byte dữ liệu dạng hex
+        for (int j = 0; j < 16 && (i + j) < size; j++) {
+            if (j == 8) fprintf(file, " "); // Ngăn cách nhóm 8 byte
+            fprintf(file, "%02X ", buf[i + j]);
+        }
+
+        // Thêm khoảng trắng nếu dòng cuối có ít hơn 16 byte
+        for (int j = size - i; j < 16; j++) {
+            if (j == 8) fprintf(file, " "); // Giữ format
+            fprintf(file, "   ");
+        }
+
+        fprintf(file, " | ");  // Ngăn cách giữa hex và ASCII
+
+        // Ghi 16 byte dữ liệu dạng ASCII nếu có thể đọc được, ngược lại ghi '.'
+        for (int j = 0; j < 16 && (i + j) < size; j++) {
+            UCHAR c = buf[i + j];
+            fprintf(file, "%c", (c >= 32 && c <= 126) ? c : '.');
+        }
+
+        fprintf(file, " |\n");
+    }
+
+    fclose(file);
+}
+
+bool checkAllIsZero(vector<BYTE> content) {
+    int n = content.size();
+    for (int i = 0; i < n; i++) {
+        if (content[i] != 0)
+            return 0;
+    }
+    return 1;
+}
+
+void NTFSParser::recoverDeletedFile(string fileName, string drive) {
+    BYTE tmpBuf[1024] = {0};
+    vector<BYTE> tmpContent;
+    if(!getDeletedFileRecord(fileName, tmpBuf)) {
+        cout << "Khong the tim duoc thong tin tep co ten " << fileName << "trong o dia " << drive << endl;
+        cout << "Kiem tra lai ten file can khoi phuc.\n";
+        return;
+    }
+    if (!getFileContent(tmpBuf, tmpContent)) {
+        cout << "Khong lay duoc du lieu cua file can tim.\n";
+        return;
+    }
+    // WriteHex_ToFile("content.txt", tmpContent); // debug
+    if (checkAllIsZero(tmpContent)) {
+        cout << "Du lieu cua file da bi he thong ghi de.\nKhong khoi phuc duoc file.\n";
+        return;
+    }
+    string outputPath = drive + "\\" + "recovered_" + fileName;
+    if (!WriteVector_ToFile(outputPath, tmpContent)) {
+        cout << "Loi tao file moi. Thu lai\n";
+        return;
+    }
+    cout << "File da khoi phuc thanh cong!\nTuy nhien van co the co loi trong du lieu cua file, vui long kiem tra lai.\n";
+}
