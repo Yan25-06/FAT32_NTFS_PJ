@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <fstream>
 using namespace std;
 
 #pragma pack(push,1)
@@ -55,7 +56,8 @@ class NTFSParser {
 		void readMFT(); // Ham dung de debug
 		void getDeletedFileNames(); // Ham dung debug
 		bool getDeletedFileRecord(string fileName, BYTE *fileBuf);
-		bool getFileContent(BYTE *fileBuf, vector<BYTE> &fileContent);
+		bool getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent);
+		void recoverDeletedFile(string fileName, string drive);
     private:
         DWORD MFTStartCluster;
         DWORD bytesPerSector;       
