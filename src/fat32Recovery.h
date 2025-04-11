@@ -17,7 +17,7 @@ private:
     void listFiles(DWORD startCluster);
 public:
     Fat32Recovery(Fat32Parser &parser, DiskManager &disk);
-    bool recoverFile(string & filename, const string &drive);
+    bool recoverFile(string & filename);
     void listDeletedFiles();
     void listFiles();
 };

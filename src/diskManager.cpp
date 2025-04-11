@@ -96,72 +96,6 @@ bool DiskManager::writeSector(DWORD sectorNumber, const BYTE* buffer, DWORD sect
     return true;
 }
 
-// bool DiskManager::readBytes(DWORD offset, BYTE* buffer, DWORD byteCount) {
-//     LARGE_INTEGER byteOffset;
-//     byteOffset.QuadPart = offset;  // Vị trí cần đọc (tính theo byte)
-
-//     // Di chuyển con trỏ file đến vị trí cần đọc
-//     if (SetFilePointerEx(hDrive, byteOffset, NULL, FILE_BEGIN) == 0) {
-//         cerr << "SetFilePointerEx failed! ERROR: " << GetLastError() << endl;
-//         return false;
-//     }
-
-//     DWORD bytesRead;
-//     if (!ReadFile(hDrive, buffer, byteCount, &bytesRead, NULL) || bytesRead != byteCount) {
-//         cerr << "ReadFile failed! ERROR: " << GetLastError() << endl;
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// bool DiskManager::readBytes(UINT64 offset, BYTE* buffer, DWORD byteCount) {
-//     if (hDrive == INVALID_HANDLE_VALUE) {
-//         cerr << "Invalid handle! Hãy kiểm tra lại CreateFile()." << endl;
-//         return false;
-//     }
-
-//     LARGE_INTEGER byteOffset;
-//     byteOffset.QuadPart = offset;
-
-//     // Di chuyển con trỏ file đến vị trí cần đọc
-//     if (SetFilePointerEx(hDrive, byteOffset, NULL, FILE_BEGIN) == 0) {
-//         DWORD err = GetLastError();
-//         cerr << "SetFilePointerEx failed! ERROR: " << err << endl;
-//         return false;
-//     }
-
-//     DWORD bytesRead = 0;
-//     printf("Handle: %p\n", hDrive);
-//     printf("Buffer: %p\n", buffer);
-//     printf("Bytes to Read: %d\n", (int)sizeof(buffer));
-//     if (!ReadFile(hDrive, buffer, byteCount, &bytesRead, NULL) || bytesRead != byteCount) {
-//         DWORD err = GetLastError();
-//         cerr << "ReadFile failed! ERROR: " << err << endl;
-
-//         switch (err) {
-//             case ERROR_ACCESS_DENIED:
-//                 cerr << "Access Denied! Chạy với quyền Administrator." << endl;
-//                 break;
-//             case ERROR_INVALID_HANDLE:
-//                 cerr << "Invalid Handle! Kiểm tra CreateFile()." << endl;
-//                 break;
-//             case ERROR_INVALID_PARAMETER:
-//                 cerr << "Invalid Parameter! Kiểm tra buffer hoặc offset." << endl;
-//                 break;
-//             case ERROR_HANDLE_EOF:
-//                 cerr << "Reached EOF! Có thể offset vượt quá giới hạn." << endl;
-//                 break;
-//             default:
-//                 cerr << "Unknown error!" << endl;
-//                 break;
-//         }
-//         return false;
-//     }
-
-//     return true;
-// }
-
 bool DiskManager::readBytes(DWORD offset, BYTE* buffer, DWORD byteCount) {
     if (hDrive == INVALID_HANDLE_VALUE) {
         cerr << "Invalid drive handle! ERROR: " << GetLastError() << endl;
@@ -202,4 +136,8 @@ bool DiskManager::readBytes(DWORD offset, BYTE* buffer, DWORD byteCount) {
     }
 
     return true;
+}
+
+string DiskManager::getDriveLetter() {
+    return driveLetter;
 }

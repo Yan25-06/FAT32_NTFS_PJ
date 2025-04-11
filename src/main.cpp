@@ -30,7 +30,7 @@ int main() {
     // vector<BYTE> tmpContent;
     // cout << parser.getDeletedFileRecord("Exponential Dist.pdf", tmpBuf) << endl;
     // cout << parser.getFileContent(tmpBuf, tmpContent) << endl;
-    parser.recoverDeletedFile("23127466_PhanNhuQuynh_PTHDC.pdf", "F:");
+    parser.recoverDeletedFile("23127466_PhanNhuQuynh_PTHDC.pdf");
     return 0;
 }
 // int main() {

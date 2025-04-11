@@ -358,11 +358,11 @@ bool NTFSParser::getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent) {
     return 0;
 }
 
-void NTFSParser::recoverDeletedFile(string fileName, string drive) {
+void NTFSParser::recoverDeletedFile(string fileName) {
     BYTE tmpBuf[1024] = {0};
     vector<BYTE> tmpContent;
     if(!getDeletedFileRecord(fileName, tmpBuf)) {
-        cout << "Khong the tim duoc thong tin tep co ten " << fileName << "trong o dia " << drive << endl;
+        cout << "Khong the tim duoc thong tin tep co ten " << fileName << "trong o dia " << diskManager.getDriveLetter() << endl;
         cout << "Kiem tra lai ten file can khoi phuc.\n";
         return;
     }
@@ -375,7 +375,7 @@ void NTFSParser::recoverDeletedFile(string fileName, string drive) {
         cout << "Du lieu cua file da bi he thong ghi de.\nKhong khoi phuc duoc file.\n";
         return;
     }
-    string outputPath = drive + "\\" + "recovered_" + fileName;
+    string outputPath = diskManager.getDriveLetter() + "\\" + "recovered_" + fileName;
     if (!WriteVector_ToFile(outputPath, tmpContent)) {
         cout << "Loi tao file moi. Thu lai\n";
         return;

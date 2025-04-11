@@ -64,8 +64,8 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
     return false;
 }
 // 🔄 Khoi phuc file
-bool Fat32Recovery::recoverFile(string &filename, const string &drive) {
-    string outputPath = drive + "\\" + "recovered_" + filename;
+bool Fat32Recovery::recoverFile(string &filename) {
+    string outputPath = diskManager.getDriveLetter() + "\\" + "recovered_" + filename;
     DWORD cluster, fileSize;
     
     if (filename.size() <= SFN_SIZE)
