@@ -2,13 +2,14 @@
 #define NTFSPARSER_H
 
 #include "diskManager.h"
+#include "utils.h"
 #include <cstring>
 #include <vector>
 #include <stdlib.h>
 #include <cmath>
 #include <cstdint>
 #include <string>
-#include <fstream>
+
 using namespace std;
 
 #pragma pack(push,1)
