@@ -83,3 +83,7 @@ DWORD Fat32Parser::getFATSize32() const {
 DWORD Fat32Parser::getRootCluster() const {
     return bootSector.rootCluster;
 }
+
+DWORD Fat32Parser::getClusterSize() const {
+    return bootSector.bytesPerSector * bootSector.sectorsPerCluster;
+}

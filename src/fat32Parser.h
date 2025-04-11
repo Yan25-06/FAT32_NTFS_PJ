@@ -52,6 +52,7 @@ class Fat32Parser {
     BYTE getNumFATs() const;
     DWORD getFATSize32() const;
     DWORD getRootCluster() const;
+    DWORD getClusterSize() const;
     
     void printBootSectorInfo();
     bool readCluster(DWORD cluster, vector<BYTE> &buffer);

@@ -62,8 +62,6 @@ string extractLFN(const DirectoryEntry *entries, size_t index) {
 }
 
 string convertToSFN(const string &filename) {
-    if (filename.size() > SFN_SIZE)
-        return filename;
     string namePart, extPart;
     size_t dotPos = filename.find_last_of('.');
 

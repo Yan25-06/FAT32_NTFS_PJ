@@ -5,9 +5,7 @@ Fat32Recovery::Fat32Recovery(Fat32Parser &parser, DiskManager &disk)
     : fatParser(parser), diskManager(disk) {}
 
 bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster, bool isDeletedFolder = 0) {
-    DWORD bytesPerSector = fatParser.getBytesPerSector();
-    DWORD sectorsPerCluster = fatParser.getSectorsPerCluster();
-    DWORD clusterSize = bytesPerSector * sectorsPerCluster;
+    DWORD clusterSize = fatParser.getClusterSize();
 
     vector<BYTE> buffer(clusterSize);
 
@@ -26,8 +24,8 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
             if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F && entries[i].attr != 0x10) 
             {
                 string fileEntryName = extractFileName(entries, filename[0], i);
-                cout << fileEntryName << endl;
-                if (fileEntryName == filename) { // So sánh không lấy ký tự đầu
+                // cout << fileEntryName << endl;
+                if (fileEntryName == filename) { 
                     outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
                     outFileSize = entries[i].fileSize;
                     return true;
@@ -70,7 +68,8 @@ bool Fat32Recovery::recoverFile(string &filename, const string &drive) {
     string outputPath = drive + "\\" + "recovered_" + filename;
     DWORD cluster, fileSize;
     
-    filename = convertToSFN(filename);
+    if (filename.size() <= SFN_SIZE)
+        filename = convertToSFN(filename);
 
     if (!findDeletedFile(filename, cluster, fileSize, fatParser.getRootCluster())) {
         return false;
@@ -104,9 +103,7 @@ void Fat32Recovery::listDeletedFiles() {
 }
 
 void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
-    DWORD bytesPerSector = fatParser.getBytesPerSector();
-    DWORD sectorsPerCluster = fatParser.getSectorsPerCluster();
-    DWORD clusterSize = bytesPerSector * sectorsPerCluster;
+    DWORD clusterSize = fatParser.getClusterSize();
 
     vector<BYTE> buffer(clusterSize);
 
@@ -155,9 +152,7 @@ void Fat32Recovery::listFiles() {
 }
 
 void Fat32Recovery::listFiles(DWORD startCluster) {
-    DWORD bytesPerSector = fatParser.getBytesPerSector();
-    DWORD sectorsPerCluster = fatParser.getSectorsPerCluster();
-    DWORD clusterSize = bytesPerSector * sectorsPerCluster;
+    DWORD clusterSize = fatParser.getClusterSize();
 
     vector<BYTE> buffer(clusterSize);
 
