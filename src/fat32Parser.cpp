@@ -8,7 +8,7 @@ bool Fat32Parser::readBootSector() {
     BYTE bootSectorData[512] = {0}; // Buffer để chứa dữ liệu Boot Sector
     DWORD bytesRead;
 
-    if (!diskManager.readSector(0, bootSectorData, 512))
+    if (!diskManager.readBytes(0, bootSectorData, 512))
     {
         cerr << "Read boot sector failed!";
         return false;
@@ -44,6 +44,8 @@ void Fat32Parser::printBootSectorInfo()
 
 // Doc du lieu tu cluster
 bool Fat32Parser::readCluster(DWORD cluster, vector<BYTE> &buffer) {
+    if (cluster < 2)
+        return false;
     DWORD firstSector = getReservedSectors() + (getNumFATs() * getFATSize32()) + ((cluster - 2) * getSectorsPerCluster());
     DWORD sectorSize = getBytesPerSector();
     

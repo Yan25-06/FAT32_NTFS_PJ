@@ -4,7 +4,7 @@
 Fat32Recovery::Fat32Recovery(Fat32Parser &parser, DiskManager &disk) 
     : fatParser(parser), diskManager(disk) {}
 
-bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster) {
+bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster, bool isDeletedFolder = 0) {
     DWORD bytesPerSector = fatParser.getBytesPerSector();
     DWORD sectorsPerCluster = fatParser.getSectorsPerCluster();
     DWORD clusterSize = bytesPerSector * sectorsPerCluster;
@@ -21,28 +21,45 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
     
     for (size_t i = 0; i < numEntries; i++) {
         // cout << i << "," << entries[i].name << endl;
-        if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F && entries[i].attr != 0x10) { // File da bi xoa
-            string fileEntryName = extractFileName(entries, filename[0], i);
-            cout << fileEntryName << endl;
-            if (fileEntryName == filename) { // So sánh không lấy ký tự đầu
-                outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
-                outFileSize = entries[i].fileSize;
-                return true;
+        if (!isDeletedFolder)
+        {
+            if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F && entries[i].attr != 0x10) 
+            {
+                string fileEntryName = extractFileName(entries, filename[0], i);
+                cout << fileEntryName << endl;
+                if (fileEntryName == filename) { // So sánh không lấy ký tự đầu
+                    outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
+                    outFileSize = entries[i].fileSize;
+                    return true;
+                }
+            }
+            if ((entries[i].attr & 0x10) && entries[i].name[0] != 0x00 && entries[i].name[0] != 0x2E) 
+            {
+                DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
+                bool isDeleted = (entries[i].name[0] == 0xE5) ? 1 : 0;
+                if (subDirCluster != 0 && findDeletedFile(filename, outCluster, outFileSize, subDirCluster, isDeleted)) {
+                    return true; // Nếu tìm thấy file trong thư mục con, dừng ngay
+                }
             }
         }
-        
-        if ((entries[i].attr & 0x10) && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x00) {
-            char nameWithNull[SFN_SIZE + 1];  // Đảm bảo có không gian cho dấu kết thúc '\0'
-            memcpy(nameWithNull, entries[i].name, SFN_SIZE); 
-            string dirName(nameWithNull);
-            trim(dirName);
-
-            if (dirName == "." || dirName == "..") {
-                continue; // Nếu là thư mục '.' hoặc '..', bỏ qua và tiếp tục
+        else
+        {
+            if (entries[i].attr != 0x0F && entries[i].attr != 0x10) 
+            {
+                string fileEntryName = extractFileName(entries, filename[0], i);
+                cout << fileEntryName << endl;
+                if (fileEntryName == filename) {
+                    outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
+                    outFileSize = entries[i].fileSize;
+                    return true;
+                }
             }
-            DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
-            if (subDirCluster != 0 && findDeletedFile(filename, outCluster, outFileSize, subDirCluster)) {
-                return true; // Nếu tìm thấy file trong thư mục con, dừng ngay
+            if ((entries[i].attr & 0x10) && entries[i].name[0] != 0x00 && entries[i].name[0] != 0x2E) 
+            {
+                DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
+                if (subDirCluster != 0 && findDeletedFile(filename, outCluster, outFileSize, subDirCluster, 1)) {
+                    return true; // Nếu tìm thấy file trong thư mục con, dừng ngay
+                }
             }
         }
     }
@@ -102,8 +119,6 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
     DirectoryEntry *entries = reinterpret_cast<DirectoryEntry *>(buffer.data());
     size_t numEntries = clusterSize / sizeof(DirectoryEntry);
 
-    bool found = false;
-
     for (size_t i = 0; i < numEntries; i++) 
     {
         char nameWithNull[SFN_SIZE + 1] = {0};
@@ -111,26 +126,17 @@ void Fat32Recovery::listDeletedFiles(DWORD currentCluster) {
         string entryName(nameWithNull);
         trim(entryName);
 
-        if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F) { // File đã bị xóa
-            found = true;
-
-            // Lấy tên file (định dạng 8.3)
-            char name[12] = {0};
-            memcpy(name, entries[i].name, 11);
-
+        if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F) 
+        {
             // Lấy số cluster đầu tiên
             DWORD startCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
-            
             // In thông tin file bị xóa
-            printf("%-20s | %-7u | %-10u\n", name, startCluster, entries[i].fileSize);
+            printf("%-20s | %-7u | %-10u\n", entryName.c_str(), startCluster, entries[i].fileSize);
         }
 
         // Nếu là thư mục con (attr & 0x10) và không phải "." hay ".."
-        if ((entries[i].attr & 0x10) && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x00) 
+        if (entries[i].attr & 0x10 && entries[i].name[0] != 0x00 && entries[i].name[0] != 0x2E) 
         {
-            if (entryName == "." || entryName == "..") {
-                continue; // Nếu là thư mục '.' hoặc '..', bỏ qua và tiếp tục
-            }
             DWORD subDirCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
             if (subDirCluster != 0 && subDirCluster != currentCluster) {
                 listDeletedFiles(subDirCluster); // Đệ quy vào thư mục con
@@ -179,11 +185,8 @@ void Fat32Recovery::listFiles(DWORD startCluster) {
             printf("%-20s | %-7u | %-10u\n", entryName.c_str(), fileCluster, fileSize);
         }
         // Nếu là thư mục con, đệ quy vào trong
-        else if (entries[i].attr & 0x10) 
-        {
-            if (entryName == "." || entryName == "..") 
-                continue;
-            
+        else if (entries[i].attr & 0x10 && entries[i].name[0] != 0xE5 && entries[i].name[0] != 0x2E) 
+        {   
             printf("[DIR] %-14s | %-7u | %-10u\n", entryName.c_str(), fileCluster, fileSize);
             listFiles(fileCluster); // Đệ quy
         }

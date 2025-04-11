@@ -12,7 +12,7 @@ private:
     Fat32Parser &fatParser;
     DiskManager &diskManager;
     
-    bool findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster);
+    bool findDeletedFile(string &filename, DWORD &outCluster, DWORD &outFileSize, DWORD startCluster, bool isDeletedFolder);
     void listDeletedFiles(DWORD currentCluster);
     void listFiles(DWORD startCluster);
 public:
