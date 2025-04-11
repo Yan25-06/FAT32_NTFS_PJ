@@ -114,20 +114,7 @@ bool NTFSParser::getAttrValue(NTFS_ATTRDEF prmAttrTitle, BYTE prmBuf[], BYTE *pr
         // Chuyển sang thuộc tính tiếp theo
         attrOffset += attrLen;
     }
-    // cout << "Khong tim thay thuoc tinh" << endl;
     return 0;  // Không tìm thấy thuộc tính
-}
-
-string ConvertWCharToString(const wchar_t* wStr) {
-    if (!wStr) return "";
-
-    int len = WideCharToMultiByte(CP_ACP, 0, wStr, -1, NULL, 0, NULL, NULL);
-    if (len <= 0) return "";
-
-    string str(len - 1, 0); // Tạo std::string có đúng số ký tự cần thiết
-    WideCharToMultiByte(CP_ACP, 0, wStr, -1, &str[0], len, NULL, NULL);
-    
-    return str;
 }
 
 void NTFSParser::getMFTRunList() {
@@ -231,13 +218,12 @@ void NTFSParser::readMFT() {
         }
         for (int j = 0 ; j < numRecord; j++) {
             if (memcmp(tmpBuf, "FILE", 4) == 0) {
-                // WORD flag = *(WORD*)&tmpBuf[0x16];
                 if (getAttrValue(ATTR_FILE_NAME, tmpBuf, tmpAttrValue)) {
                     BYTE tmpFileLen = tmpAttrValue[0x58];
                     wchar_t	tmpFileName[MAX_PATH] = {0};
                     memset(tmpFileName,0,sizeof(tmpFileName));
                     memcpy(tmpFileName,tmpAttrValue+0x5A,tmpFileLen<<1);
-                    // cout << ConvertWCharToString(tmpFileName) << endl;
+                    cout << ConvertWCharToString(tmpFileName) << endl;
                 }
             }
             offset += 1024;
@@ -347,7 +333,7 @@ bool NTFSParser::getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent) {
             this->getDataRunList(tmpAttrValue, dataRunOffset, datarun);
             DWORD offset;
             int n = datarun.size();
-            int bytesPerCluster = sectorsPerCluster * bytesPerSector;
+            const int bytesPerCluster = sectorsPerCluster * bytesPerSector;
             BYTE tmpBuf[bytesPerCluster] = {0};
             for (int i = 0; i < n; i++) {
                 offset = datarun[i].lcn * sectorsPerCluster * bytesPerSector;
@@ -370,65 +356,6 @@ bool NTFSParser::getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent) {
         }
     }
     return 0;
-}
-
-bool WriteVector_ToFile(string filename, const vector<BYTE>& data) {
-    ofstream outFile(filename, std::ios::binary);
-    if (!outFile) {
-        return false; // Mở tệp thất bại
-    }
-    outFile.write(reinterpret_cast<const char*>(data.data()), data.size());
-    return outFile.good();
-}
-
-void WriteHex_ToFile(const char *filename, vector<BYTE> buf) {
-    FILE *file = fopen(filename, "w");
-    if (!file) {
-        printf("Khong mo duoc file!\n");
-        return;
-    }
-    int size = buf.size();
-    // Ghi dòng header cho index cột (00 01 02 ... 0F)
-    fprintf(file, "Offset  |  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  | ASCII\n");
-    fprintf(file, "--------+------------------------------------------------+----------------\n");
-
-    for (int i = 0; i < size; i += 16) {
-        // Ghi offset (chỉ mục dòng)
-        fprintf(file, "%06X  |  ", i);
-
-        // Ghi 16 byte dữ liệu dạng hex
-        for (int j = 0; j < 16 && (i + j) < size; j++) {
-            if (j == 8) fprintf(file, " "); // Ngăn cách nhóm 8 byte
-            fprintf(file, "%02X ", buf[i + j]);
-        }
-
-        // Thêm khoảng trắng nếu dòng cuối có ít hơn 16 byte
-        for (int j = size - i; j < 16; j++) {
-            if (j == 8) fprintf(file, " "); // Giữ format
-            fprintf(file, "   ");
-        }
-
-        fprintf(file, " | ");  // Ngăn cách giữa hex và ASCII
-
-        // Ghi 16 byte dữ liệu dạng ASCII nếu có thể đọc được, ngược lại ghi '.'
-        for (int j = 0; j < 16 && (i + j) < size; j++) {
-            UCHAR c = buf[i + j];
-            fprintf(file, "%c", (c >= 32 && c <= 126) ? c : '.');
-        }
-
-        fprintf(file, " |\n");
-    }
-
-    fclose(file);
-}
-
-bool checkAllIsZero(vector<BYTE> content) {
-    int n = content.size();
-    for (int i = 0; i < n; i++) {
-        if (content[i] != 0)
-            return 0;
-    }
-    return 1;
 }
 
 void NTFSParser::recoverDeletedFile(string fileName, string drive) {
