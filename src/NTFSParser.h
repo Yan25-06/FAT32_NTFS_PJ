@@ -58,7 +58,7 @@ class NTFSParser {
 		void getDeletedFileNames(); // Ham dung debug
 		bool getDeletedFileRecord(string fileName, BYTE *fileBuf);
 		bool getFileContent(BYTE fileBuf[], vector<BYTE> &fileContent);
-		void recoverDeletedFile(string fileName);
+		bool recoverDeletedFile(string fileName);
     private:
         DWORD MFTStartCluster;
         DWORD bytesPerSector;       

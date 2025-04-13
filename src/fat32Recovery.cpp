@@ -24,10 +24,12 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
             if (entries[i].name[0] == 0xE5 && entries[i].attr != 0x0F && entries[i].attr != 0x10) 
             {
                 string fileEntryName = extractFileName(entries, filename[0], i);
-                // cout << fileEntryName << endl;
+                
                 if (fileEntryName == filename) { 
+                    // cout << fileEntryName << endl;
                     outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
                     outFileSize = entries[i].fileSize;
+                    // cout << "Cluster: " << outCluster << ", File Size: " << outFileSize << endl;
                     return true;
                 }
             }
@@ -45,7 +47,7 @@ bool Fat32Recovery::findDeletedFile(string &filename, DWORD &outCluster, DWORD &
             if (entries[i].attr != 0x0F && entries[i].attr != 0x10) 
             {
                 string fileEntryName = extractFileName(entries, filename[0], i);
-                cout << fileEntryName << endl;
+                // cout << fileEntryName << endl;
                 if (fileEntryName == filename) {
                     outCluster = (entries[i].startClusterHigh << 16) | entries[i].startClusterLow;
                     outFileSize = entries[i].fileSize;
@@ -77,6 +79,7 @@ bool Fat32Recovery::recoverFile(string &filename) {
 
     vector<BYTE> fileData(fileSize, 0);
     if (!fatParser.readCluster(cluster, fileData)) {
+        cerr << "Loi doc file!\n";
         return false;
     }
 

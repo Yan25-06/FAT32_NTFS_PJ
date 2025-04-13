@@ -44,8 +44,10 @@ void Fat32Parser::printBootSectorInfo()
 
 // Doc du lieu tu cluster
 bool Fat32Parser::readCluster(DWORD cluster, vector<BYTE> &buffer) {
-    if (cluster < 2)
+    if (cluster < 2) {
+        cerr << "Cluster khong hop le: " << cluster << endl;
         return false;
+    }
     DWORD firstSector = getReservedSectors() + (getNumFATs() * getFATSize32()) + ((cluster - 2) * getSectorsPerCluster());
     DWORD sectorSize = getBytesPerSector();
     
