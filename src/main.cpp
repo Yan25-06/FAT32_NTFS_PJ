@@ -65,10 +65,14 @@ void runNtfsMenu(NTFSParser& parser, DiskManager& disk) {
                 break;
             }
             case 3: {
+                cout << "Danh sach cac file trong MFT:\n";
+                cout << "--------------------------------\n";
                 parser.readMFT();
                 break;
             }
             case 4: {
+                cout << "Danh sach cac file da xoa:\n";
+                cout << "--------------------------------\n";
                 parser.getDeletedFileNames();
                 break;
             }
@@ -78,11 +82,7 @@ void runNtfsMenu(NTFSParser& parser, DiskManager& disk) {
                 cin.ignore();
                 getline(cin, filename);
 
-                if (parser.recoverDeletedFile(filename)) {
-                    cout << "Khoi phuc thanh cong!\n";
-                } else {
-                    cerr << "Khoi phuc that bai!\n";
-                }
+                parser.recoverDeletedFile(filename);
                 break;
             }
             case 6: {

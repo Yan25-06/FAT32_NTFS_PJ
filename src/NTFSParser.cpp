@@ -258,7 +258,7 @@ void NTFSParser::getDeletedFileNames() {
                         wchar_t	tmpFileName[MAX_PATH] = {0};
                         memset(tmpFileName,0,sizeof(tmpFileName));
                         memcpy(tmpFileName,tmpAttrValue+0x5A,tmpFileLen<<1);
-                        // cout << ConvertWCharToString(tmpFileName) << endl;
+                        cout << ConvertWCharToString(tmpFileName) << endl;
                     }
                 }
             }
@@ -362,7 +362,7 @@ bool NTFSParser::recoverDeletedFile(string fileName) {
     BYTE tmpBuf[1024] = {0};
     vector<BYTE> tmpContent;
     if(!getDeletedFileRecord(fileName, tmpBuf)) {
-        cout << "Khong the tim duoc thong tin tep co ten " << fileName << "trong o dia " << diskManager.getDriveLetter() << endl;
+        cout << "Khong the tim duoc thong tin tep co ten " << fileName << " trong o dia " << diskManager.getDriveLetter() << endl;
         cout << "Kiem tra lai ten file can khoi phuc.\n";
         return 0;
     }
